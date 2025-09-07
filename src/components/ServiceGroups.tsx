@@ -144,8 +144,7 @@ const ServiceGroups: React.FC<ServiceGroupsProps> = ({ serviceGroups, onVendorSe
         return;
       }
 
-      // For testing, we'll simulate quote requests since vendor_profiles table is empty
-      // In production, this would create actual quote requests with real vendor user IDs
+      // Create real vendor profiles for each selected vendor if they don't exist
       const selectedVendorCount = Object.values(selectedVendors).flat().length;
       
       if (selectedVendorCount === 0) {
@@ -154,22 +153,62 @@ const ServiceGroups: React.FC<ServiceGroupsProps> = ({ serviceGroups, onVendorSe
         return;
       }
 
-      // Create mock quote requests for testing - these won't be in database but will show success
+      // First, create vendor profiles for selected vendors (for testing purposes)
+      const vendorUsersToCreate = [];
       const quoteRequests = [];
+      
       for (const [groupName, vendorIds] of Object.entries(selectedVendors)) {
+        const vendors = generateMockVendors(groupName);
         for (const vendorId of vendorIds) {
-          quoteRequests.push({
-            project_id: projectData.id,
-            client_id: user.id,
-            vendor_id: vendorId, // Using mock vendor ID for testing
-            status: 'pending',
-            response_deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-          });
+          const vendor = vendors.find(v => v.id === vendorId);
+          if (vendor) {
+            // Create a test user ID for this vendor (deterministic based on vendor ID)
+            const vendorUserId = vendorId.replace(/^[0-9-]+/, '10000000-0000-4000-8000');
+            
+            vendorUsersToCreate.push({
+              user_id: vendorUserId,
+              business_name: vendor.name,
+              specialty: [vendor.specialty],
+              location: vendor.location,
+              rating: vendor.rating,
+              total_reviews: vendor.reviews,
+              verification_status: vendor.verified ? 'verified' : 'pending',
+              years_experience: Math.floor(Math.random() * 20) + 5,
+              bio: `Professional ${groupName} service provider with ${vendor.reviews} satisfied clients.`,
+              services_offered: [groupName],
+              availability_status: true
+            });
+            
+            quoteRequests.push({
+              project_id: projectData.id,
+              client_id: user.id,
+              vendor_id: vendorUserId,
+              status: 'pending',
+              response_deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+            });
+          }
         }
       }
 
-      // Simulate API delay for realism
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Create vendor profiles (ignore errors if they already exist)
+      if (vendorUsersToCreate.length > 0) {
+        await supabase.from('vendor_profiles').upsert(vendorUsersToCreate, { 
+          onConflict: 'user_id',
+          ignoreDuplicates: true 
+        });
+      }
+
+      // Create the actual quote requests in the database
+      const { error: quoteError } = await supabase
+        .from('quote_requests')
+        .insert(quoteRequests);
+
+      if (quoteError) {
+        console.error('Error creating quote requests:', quoteError);
+        toast.error('Failed to send quote requests. Please try again.');
+        setIsSubmitting(false);
+        return;
+      }
 
       toast.success(`Successfully sent ${quoteRequests.length} quote requests!`);
       setIsSubmitting(false);
