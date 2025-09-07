@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuoteForm } from '@/contexts/QuoteFormContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { Building2, Users, Star, MapPin, CheckCircle2, Clock, DollarSign } from 'lucide-react';
 
 interface Vendor {
@@ -99,33 +101,66 @@ const ServiceGroups: React.FC<ServiceGroupsProps> = ({ serviceGroups, onVendorSe
 
     setIsSubmitting(true);
     
-    // Create tickets for each selected vendor
-    const tickets = [];
-    Object.entries(selectedVendors).forEach(([groupName, vendorIds]) => {
-      const vendors = generateMockVendors(groupName);
-      vendorIds.forEach(vendorId => {
-        const vendor = vendors.find(v => v.id === vendorId);
-        if (vendor) {
-          tickets.push({
-            id: `ticket-${Date.now()}-${Math.random()}`,
-            groupName,
-            vendor,
-            projectDescription,
-            formData,
-            status: 'pending' as const,
-            createdAt: new Date()
-          });
-        }
+    try {
+      // First create the project in the database
+      const { data: projectData, error: projectError } = await supabase
+        .from('projects')
+        .insert({
+          title: projectDescription.substring(0, 100) || 'Project Request',
+          description: projectDescription,
+          form_data: formData,
+          service_groups: serviceGroups,
+          client_id: user.id,
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (projectError) {
+        console.error('Error creating project:', projectError);
+        toast.error('Failed to create project. Please try again.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Create quote requests for each selected vendor
+      const quoteRequests = [];
+      Object.entries(selectedVendors).forEach(([groupName, vendorIds]) => {
+        const vendors = generateMockVendors(groupName);
+        vendorIds.forEach(vendorId => {
+          const vendor = vendors.find(v => v.id === vendorId);
+          if (vendor) {
+            quoteRequests.push({
+              project_id: projectData.id,
+              client_id: user.id,
+              vendor_id: vendor.id, // This would be actual vendor user IDs in production
+              status: 'pending',
+              response_deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
+            });
+          }
+        });
       });
-    });
-    
-    // Simulate API call for submitting quote requests
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsSubmitting(false);
-    
-    // Navigate to tickets page with created tickets
-    navigate('/tickets', { state: { tickets } });
+
+      const { error: quoteError } = await supabase
+        .from('quote_requests')
+        .insert(quoteRequests);
+
+      if (quoteError) {
+        console.error('Error creating quote requests:', quoteError);
+        toast.error('Failed to send quote requests. Please try again.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      toast.success(`Successfully sent ${quoteRequests.length} quote requests!`);
+      setIsSubmitting(false);
+      navigate('/tickets');
+      
+    } catch (error) {
+      console.error('Error submitting quotes:', error);
+      toast.error('An unexpected error occurred. Please try again.');
+      setIsSubmitting(false);
+    }
   };
 
   const getTotalSelections = () => {

@@ -189,7 +189,7 @@ const Index = () => {
               <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center">
                 <Home className="w-6 h-6 text-white bg-[#000a0e]/0" />
               </div>
-              <span className="text-2xl font-bold">BuildEasy</span>
+              <img src="/lovable-uploads/569809aa-baff-4dfd-a37e-09697c885f6d.png" alt="Logo" className="h-8" />
             </div>
             
             {/* Single Login/Signup Button */}
