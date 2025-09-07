@@ -153,49 +153,20 @@ const ServiceGroups: React.FC<ServiceGroupsProps> = ({ serviceGroups, onVendorSe
         return;
       }
 
-      // First, create vendor profiles for selected vendors (for testing purposes)
-      const vendorUsersToCreate = [];
+      // Use the real vendor user ID for all mock quote requests (necronofficial@gmail.com)
+      const realVendorUserId = 'e98fb33b-6856-41c3-823c-6a1932ff41ac';
       const quoteRequests = [];
       
       for (const [groupName, vendorIds] of Object.entries(selectedVendors)) {
-        const vendors = generateMockVendors(groupName);
         for (const vendorId of vendorIds) {
-          const vendor = vendors.find(v => v.id === vendorId);
-          if (vendor) {
-            // Create a test user ID for this vendor (deterministic based on vendor ID)
-            const vendorUserId = `10000000-0000-4000-8000-${vendorId.split('-').pop()}`;
-            
-            vendorUsersToCreate.push({
-              user_id: vendorUserId,
-              business_name: vendor.name,
-              specialty: [vendor.specialty],
-              location: vendor.location,
-              rating: vendor.rating,
-              total_reviews: vendor.reviews,
-              verification_status: vendor.verified ? 'verified' : 'pending',
-              years_experience: Math.floor(Math.random() * 20) + 5,
-              bio: `Professional ${groupName} service provider with ${vendor.reviews} satisfied clients.`,
-              services_offered: [groupName],
-              availability_status: true
-            });
-            
-            quoteRequests.push({
-              project_id: projectData.id,
-              client_id: user.id,
-              vendor_id: vendorUserId,
-              status: 'pending',
-              response_deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-            });
-          }
+          quoteRequests.push({
+            project_id: projectData.id,
+            client_id: user.id,
+            vendor_id: realVendorUserId,
+            status: 'pending',
+            response_deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+          });
         }
-      }
-
-      // Create vendor profiles (ignore errors if they already exist)
-      if (vendorUsersToCreate.length > 0) {
-        await supabase.from('vendor_profiles').upsert(vendorUsersToCreate, { 
-          onConflict: 'user_id',
-          ignoreDuplicates: true 
-        });
       }
 
       // Create the actual quote requests in the database
