@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface ProjectData {
+  id?: string;
   description: string;
   formData?: any;
   serviceGroups?: string[];

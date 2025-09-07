@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuoteForm } from '@/contexts/QuoteFormContext';
 import { toast } from '@/hooks/use-toast';
-import { Home, Mail, Lock, User, Building } from 'lucide-react';
+import { Home, Mail, Lock, User, Building, ArrowLeft } from 'lucide-react';
 import { 
   Form, 
   FormControl, 
@@ -252,9 +252,45 @@ const Auth = () => {
     }
   };
 
+  const handleForgotPassword = async (data: { email: string }) => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: `${window.location.origin}/auth?type=${initialUserType}&reset=true`
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Password reset email sent!',
+        description: 'Check your inbox for the reset link.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Reset failed',
+        description: error.message,
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+        {/* Back Button */}
+        <div className="mb-4">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Go to previous page
+          </Button>
+        </div>
+
         {/* Logo */}
         <div className="flex items-center justify-center space-x-2 mb-8">
           <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center">
@@ -319,6 +355,18 @@ const Auth = () => {
                     </Button>
                   </form>
                 </Form>
+
+                <div className="text-center mb-4">
+                  <Button 
+                    type="button" 
+                    variant="link" 
+                    onClick={() => handleForgotPassword({ email: loginForm.getValues('email') })}
+                    className="text-sm"
+                    disabled={!loginForm.getValues('email') || loading}
+                  >
+                    Forgot password?
+                  </Button>
+                </div>
 
                 <div className="relative my-4">
                   <div className="absolute inset-0 flex items-center">

@@ -10,6 +10,8 @@ import { AuthModal } from '@/components/AuthModal';
 import { Footer } from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuoteForm } from '@/contexts/QuoteFormContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 import { Sparkles, Home, Users, Zap, ChevronRight } from 'lucide-react';
 const Index = () => {
   const navigate = useNavigate();
@@ -58,7 +60,7 @@ const Index = () => {
     });
     setCurrentStep('services');
   };
-  const handleVendorSelect = (groupName: string, vendor: any) => {
+  const handleVendorSelect = async (groupName: string, vendor: any) => {
     // Check if user is authenticated before allowing vendor selection
     if (!user) {
       // Store current progress and show auth modal
@@ -68,16 +70,71 @@ const Index = () => {
       return;
     }
 
-    const ticket = {
-      id: `ticket-${Date.now()}-${Math.random()}`,
-      groupName,
-      vendor,
-      projectDescription: projectData.description,
-      formData: projectData.formData,
-      status: 'pending',
-      createdAt: new Date()
-    };
-    setSelectedTickets([...selectedTickets, ticket]);
+    try {
+      // First, create or get the project
+      let projectId = projectData.id;
+      
+      if (!projectId) {
+        const { data: project, error: projectError } = await supabase
+          .from('projects')
+          .insert({
+            client_id: user.id,
+            title: projectData.description.substring(0, 100),
+            description: projectData.description,
+            service_groups: projectData.serviceGroups,
+            form_data: projectData.formData,
+            status: 'active'
+          })
+          .select()
+          .single();
+
+        if (projectError) throw projectError;
+        
+        projectId = project.id;
+        setProjectData({
+          ...projectData,
+          id: projectId
+        });
+      }
+
+      // Create the quote request
+      const { data: quoteRequest, error: quoteError } = await supabase
+        .from('quote_requests')
+        .insert({
+          project_id: projectId,
+          client_id: user.id,
+          vendor_id: vendor.id,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (quoteError) throw quoteError;
+
+      // Create local ticket for immediate UI update
+      const ticket = {
+        id: quoteRequest.id,
+        groupName,
+        vendor,
+        projectDescription: projectData.description,
+        formData: projectData.formData,
+        status: 'pending' as const,
+        createdAt: new Date()
+      };
+      
+      setSelectedTickets([...selectedTickets, ticket]);
+      
+      toast({
+        title: "Quote Request Sent",
+        description: `Your request has been sent to ${vendor.name}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to send quote request",
+        variant: "destructive",
+      });
+    }
   };
   const handleStartOver = () => {
     setCurrentStep('initial');

@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import TicketDetailsModal from '@/components/TicketDetailsModal';
 import SendMessageModal from '@/components/SendMessageModal';
 import { 
@@ -55,7 +57,9 @@ interface Ticket {
 const Tickets = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
@@ -64,11 +68,76 @@ const Tickets = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Get tickets from navigation state
-    if (location.state?.tickets) {
-      setTickets(location.state.tickets);
+    if (user) {
+      fetchTickets();
     }
-  }, [location.state]);
+  }, [user]);
+
+  const fetchTickets = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      // Fetch quote requests with related data
+      const { data: quoteRequests, error } = await supabase
+        .from('quote_requests')
+        .select('*')
+        .eq('client_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Fetch related project and vendor data for each quote request
+      const transformedTickets: Ticket[] = [];
+      
+      for (const qr of quoteRequests || []) {
+        // Fetch project data
+        const { data: project } = await supabase
+          .from('projects')
+          .select('title, description, service_groups')
+          .eq('id', qr.project_id)
+          .single();
+
+        // Fetch vendor profile data
+        const { data: vendorProfile } = await supabase
+          .from('vendor_profiles')
+          .select('business_name, location, rating, total_reviews, verification_status, specialty')
+          .eq('user_id', qr.vendor_id)
+          .single();
+
+        transformedTickets.push({
+          id: qr.id,
+          groupName: project?.service_groups?.[0] || 'General',
+          vendor: {
+            id: qr.vendor_id,
+            name: vendorProfile?.business_name || 'Unknown Vendor',
+            rating: vendorProfile?.rating || 0,
+            reviews: vendorProfile?.total_reviews || 0,
+            location: vendorProfile?.location || 'Unknown',
+            specialty: vendorProfile?.specialty?.[0] || 'General',
+            avgPrice: qr.quoted_amount ? `$${qr.quoted_amount}` : 'Quote Pending',
+            deliveryTime: qr.estimated_timeline || 'TBD',
+            verified: vendorProfile?.verification_status === 'verified'
+          },
+          projectDescription: project?.description || project?.title || 'No description',
+          status: qr.status as 'pending' | 'quoted' | 'accepted' | 'declined' | 'completed',
+          createdAt: new Date(qr.created_at),
+          quotedAmount: qr.quoted_amount ? `$${qr.quoted_amount}` : undefined,
+          notes: qr.vendor_notes || undefined
+        });
+      }
+
+      setTickets(transformedTickets);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: 'Failed to load tickets',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredTickets = tickets.filter(ticket => {
     const matchesSearch = ticket.vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -118,13 +187,28 @@ const Tickets = () => {
     setIsMessageModalOpen(true);
   };
 
-  const handleDeleteRequest = (ticketId: string) => {
-    setTickets(prevTickets => prevTickets.filter(t => t.id !== ticketId));
-    toast({
-      title: "Request Deleted",
-      description: "The quote request has been successfully deleted.",
-      variant: "destructive",
-    });
+  const handleDeleteRequest = async (ticketId: string) => {
+    try {
+      const { error } = await supabase
+        .from('quote_requests')
+        .delete()
+        .eq('id', ticketId);
+
+      if (error) throw error;
+
+      setTickets(prevTickets => prevTickets.filter(t => t.id !== ticketId));
+      toast({
+        title: "Request Deleted",
+        description: "The quote request has been successfully deleted.",
+        variant: "destructive",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete request",
+        variant: "destructive",
+      });
+    }
   };
 
   const handlePortfolioClick = (ticket: Ticket) => {
@@ -232,7 +316,14 @@ const Tickets = () => {
         </div>
 
         {/* Tickets List */}
-        {filteredTickets.length === 0 ? (
+        {loading ? (
+          <Card>
+            <CardContent className="pt-12 pb-12 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p>Loading your tickets...</p>
+            </CardContent>
+          </Card>
+        ) : filteredTickets.length === 0 ? (
           <Card>
             <CardContent className="pt-12 pb-12 text-center">
               <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
