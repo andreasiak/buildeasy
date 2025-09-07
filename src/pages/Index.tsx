@@ -186,10 +186,7 @@ const Index = () => {
           {/* Header with Auth Buttons */}
           <div className="flex items-center justify-between w-full mb-16">
             <div className="flex items-center space-x-2">
-              <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center">
-                <Home className="w-6 h-6 text-white bg-[#000a0e]/0" />
-              </div>
-              <img src="/lovable-uploads/569809aa-baff-4dfd-a37e-09697c885f6d.png" alt="Logo" className="h-8" />
+              <img src="/lovable-uploads/569809aa-baff-4dfd-a37e-09697c885f6d.png" alt="Logo" className="w-[270px] h-[110px] object-contain" />
             </div>
             
             {/* Single Login/Signup Button */}

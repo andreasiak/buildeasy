@@ -130,16 +130,24 @@ const ServiceGroups: React.FC<ServiceGroupsProps> = ({ serviceGroups, onVendorSe
         vendorIds.forEach(vendorId => {
           const vendor = vendors.find(v => v.id === vendorId);
           if (vendor) {
+            // Generate a valid UUID for mock vendors
+            const mockVendorUUID = `00000000-0000-4000-8000-${vendorId.padStart(12, '0')}`;
             quoteRequests.push({
               project_id: projectData.id,
               client_id: user.id,
-              vendor_id: vendor.id, // This would be actual vendor user IDs in production
+              vendor_id: mockVendorUUID,
               status: 'pending',
               response_deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
             });
           }
         });
       });
+
+      if (quoteRequests.length === 0) {
+        toast.error('Please select at least one vendor before submitting.');
+        setIsSubmitting(false);
+        return;
+      }
 
       const { error: quoteError } = await supabase
         .from('quote_requests')
@@ -181,8 +189,8 @@ const ServiceGroups: React.FC<ServiceGroupsProps> = ({ serviceGroups, onVendorSe
         ...selectedVendors,
         [groupName]: [...groupSelections, vendor.id]
       });
-      onVendorSelect(groupName, vendor);
     }
+    // Note: Removed onVendorSelect call - selection only updates UI, doesn't submit quotes
   };
 
   const getGroupIcon = (groupName: string) => {
