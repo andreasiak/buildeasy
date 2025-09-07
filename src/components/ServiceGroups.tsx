@@ -163,7 +163,7 @@ const ServiceGroups: React.FC<ServiceGroupsProps> = ({ serviceGroups, onVendorSe
           const vendor = vendors.find(v => v.id === vendorId);
           if (vendor) {
             // Create a test user ID for this vendor (deterministic based on vendor ID)
-            const vendorUserId = vendorId.replace(/^[0-9-]+/, '10000000-0000-4000-8000');
+            const vendorUserId = `10000000-0000-4000-8000-${vendorId.split('-').pop()}`;
             
             vendorUsersToCreate.push({
               user_id: vendorUserId,
