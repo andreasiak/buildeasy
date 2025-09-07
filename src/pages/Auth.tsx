@@ -293,7 +293,7 @@ const Auth = () => {
 
         {/* Logo */}
         <div className="flex items-center justify-center space-x-2 mb-8">
-          <img src="/lovable-uploads/569809aa-baff-4dfd-a37e-09697c885f6d.png" alt="Logo" className="h-16 w-auto object-contain" />
+          <img src="/lovable-uploads/569809aa-baff-4dfd-a37e-09697c885f6d.png" alt="Logo" className="h-12 w-auto object-contain" />
         </div>
 
         <Card className="shadow-elegant bg-white/90 backdrop-blur-sm border border-white/20">
