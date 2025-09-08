@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import QuestionnaireForm from '@/components/QuestionnaireForm';
+import EnhancedQuestionnaireForm from '@/components/EnhancedQuestionnaireForm';
 import ServiceGroups from '@/components/ServiceGroups';
 import { AuthButton } from '@/components/AuthButton';
 import { AuthModal } from '@/components/AuthModal';
@@ -13,6 +13,7 @@ import { useQuoteForm } from '@/contexts/QuoteFormContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Sparkles, Home, Users, Zap, ChevronRight } from 'lucide-react';
+import { getRandomExamples } from '@/data/projectExamples';
 const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -26,24 +27,22 @@ const Index = () => {
     setWasRedirectedFromAuth,
     setRedirectPath
   } = useQuoteForm();
-  const [animatedText, setAnimatedText] = useState('3-bedroom modern house');
+  const [animatedText, setAnimatedText] = useState('Modern family house');
   const [showAuthModal, setShowAuthModal] = useState(false);
-
-  const textVariations = [
-    '4 bedroom modern house, 2 large baths, landscaped garden and pool',
-    'large modern house with 2 bedrooms and a single shower with an indoor pool',
-    'minimalistic house, 2 bedrooms, 1 bath, garden',
-    'large complex, 15 units of single bedroom houses, underground parking'
-  ];
+  const [currentExamples, setCurrentExamples] = useState(() => getRandomExamples(3));
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setAnimatedText(prev => {
-        const currentIndex = textVariations.indexOf(prev);
-        const nextIndex = (currentIndex + 1) % textVariations.length;
-        return textVariations[nextIndex];
-      });
-    }, 4000);
+      setCurrentExamples(getRandomExamples(3));
+    }, 7000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAnimatedText(getRandomExamples(1)[0]);
+    }, 7000);
 
     return () => clearInterval(interval);
   }, []);
@@ -157,7 +156,7 @@ const Index = () => {
             </p>
           </div>
           
-          <QuestionnaireForm projectDescription={projectData.description} onComplete={handleQuestionnaireComplete} />
+          <EnhancedQuestionnaireForm projectDescription={projectData.description} onComplete={handleQuestionnaireComplete} />
         </div>
       </div>;
   }
@@ -186,7 +185,7 @@ const Index = () => {
           {/* Header with Auth Buttons */}
           <div className="flex items-center justify-between w-full mb-16">
             <div className="flex items-center space-x-2">
-              <img src="/lovable-uploads/569809aa-baff-4dfd-a37e-09697c885f6d.png" alt="Logo" className="h-20 w-auto object-contain" />
+              <img src="/lovable-uploads/569809aa-baff-4dfd-a37e-09697c885f6d.png" alt="Logo" className="h-[120px] w-auto object-contain" />
             </div>
             
             {/* Single Login/Signup Button */}
@@ -227,15 +226,16 @@ const Index = () => {
                 </div>
                 
                 {/* Example Projects - moved here */}
-                <div className="text-center">
+                  <div className="text-center">
                   <h2 className="text-lg font-semibold mb-3">Try these examples:</h2>
                   <div className="flex flex-wrap justify-center gap-2">
-                    {["4 bedroom modern house, 2 large baths, landscaped garden and pool", "Large modern house with 2 bedrooms and a single shower with an indoor pool", "Minimalistic house, 2 bedrooms, 1 bath, garden", "Large complex, 15 units of single bedroom houses, underground parking"].map((example, index) => (
+                    {currentExamples.map((example, index) => (
                       <Button 
-                        key={index} 
+                        key={`${example}-${index}`} 
                         variant="outline" 
                         size="sm" 
                         onClick={() => setProjectData({
+                          ...projectData,
                           description: example
                         })} 
                         className="text-xs hover:border-primary hover:text-primary"

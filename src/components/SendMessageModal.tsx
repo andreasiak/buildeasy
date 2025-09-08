@@ -25,11 +25,23 @@ interface SendMessageModalProps {
 const SendMessageModal = ({ ticket, isOpen, onClose }: SendMessageModalProps) => {
   const [message, setMessage] = useState('');
   const [subject, setSubject] = useState('');
+  const getInitialMessage = () => {
+    const variations = [
+      `Hi ${ticket?.vendor?.name || 'there'}, I'm interested in getting a quote for ${ticket?.groupName} services for my project: "${ticket?.projectDescription || 'project details'}". Please let me know if you need any additional information.`,
+      `Hello ${ticket?.vendor?.name || 'there'}, I've submitted a quote request for ${ticket?.groupName} regarding "${ticket?.projectDescription || 'my project'}". Could you provide an estimate and timeline?`,
+      `Hi ${ticket?.vendor?.name || 'there'}, I need ${ticket?.groupName} services for "${ticket?.projectDescription || 'my project'}". When would you be available to discuss the details?`,
+      `Hello ${ticket?.vendor?.name || 'there'}, I'm looking for ${ticket?.groupName} expertise for my project: "${ticket?.projectDescription || 'construction project'}". Please review and let me know your thoughts.`,
+      `Hi ${ticket?.vendor?.name || 'there'}, I'd like to get a professional quote for ${ticket?.groupName} services. My project involves: "${ticket?.projectDescription || 'various construction needs'}". Thanks!`
+    ];
+    
+    return variations[Math.floor(Math.random() * variations.length)];
+  };
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       sender: 'user',
-      content: `Hi ${ticket?.vendor?.name || 'there'}, I've submitted a quote request for ${ticket?.groupName}. Please let me know if you need any additional information.`,
+      content: getInitialMessage(),
       timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
     },
   ]);

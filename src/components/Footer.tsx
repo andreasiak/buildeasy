@@ -7,11 +7,11 @@ export const Footer = () => {
   return (
     <footer className="bg-card border-t border-border">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           {/* Brand Section */}
-          <div className="space-y-4">
+          <div className="space-y-4 md:col-span-2">
             <div className="flex items-center space-x-2">
-              <img src="/lovable-uploads/569809aa-baff-4dfd-a37e-09697c885f6d.png" alt="Logo" className="h-8 w-auto object-contain" />
+              <img src="/lovable-uploads/569809aa-baff-4dfd-a37e-09697c885f6d.png" alt="Logo" className="h-[120px] w-auto object-contain" />
             </div>
             <p className="text-muted-foreground text-sm">
               Connecting dreams with the right professionals to build anything, anywhere.
@@ -50,36 +50,44 @@ export const Footer = () => {
             </ul>
           </div>
 
-          {/* Legal */}
-          <div className="space-y-4">
-            <h3 className="font-semibold text-foreground">Legal</h3>
-            <ul className="space-y-2">
-              <li><Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link></li>
-              <li><Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link></li>
-              <li><Link to="/cookies" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Cookie Policy</Link></li>
-              <li><Link to="/acceptable-use" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Acceptable Use</Link></li>
-            </ul>
+          {/* Legal & Actions */}
+          <div className="space-y-4 md:col-span-2">
+            <div className="flex flex-col md:flex-row gap-8">
+              {/* Legal Links */}
+              <div className="space-y-4 flex-1">
+                <h3 className="font-semibold text-foreground">Legal</h3>
+                <ul className="space-y-2">
+                  <li><Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link></li>
+                  <li><Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link></li>
+                  <li><Link to="/cookies" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Cookie Policy</Link></li>
+                  <li><Link to="/acceptable-use" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Acceptable Use</Link></li>
+                </ul>
+              </div>
+              
+              {/* Divider & Sign Up Buttons */}
+              <div className="flex flex-col items-center space-y-4">
+                <div className="hidden md:block w-px h-24 bg-border"></div>
+                <div className="flex flex-col gap-3">
+                  <Link to="/auth?type=client">
+                    <Button size="lg" className="bg-gradient-primary text-white border-0 hover:opacity-90 w-full">
+                      Signup as Client
+                    </Button>
+                  </Link>
+                  <Link to="/auth?type=vendor">
+                    <Button size="lg" className="bg-gradient-primary text-white border-0 hover:opacity-90 w-full">
+                      Signup as Vendor
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Bottom Section */}
-        <div className="border-t border-border mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="text-sm text-muted-foreground">
+        <div className="border-t border-border mt-8 pt-8">
+          <div className="text-sm text-muted-foreground text-center">
             © 2024 BuildEasy. All rights reserved.
-          </div>
-          
-          {/* Sign Up Buttons */}
-          <div className="flex gap-3">
-            <Link to="/auth?type=client">
-              <Button variant="outline" size="sm" className="bg-gradient-primary text-white border-0 hover:opacity-90">
-                Signup as Client
-              </Button>
-            </Link>
-            <Link to="/auth?type=vendor">
-              <Button variant="outline" size="sm" className="bg-gradient-primary text-white border-0 hover:opacity-90">
-                Signup as Vendor
-              </Button>
-            </Link>
           </div>
         </div>
       </div>

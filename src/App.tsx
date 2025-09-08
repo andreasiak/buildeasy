@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { QuoteFormProvider } from "@/contexts/QuoteFormContext";
 import { EmailConfirmationHandler } from "@/components/EmailConfirmationHandler";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -33,39 +35,50 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <EmailConfirmationHandler />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/cookies" element={<Cookies />} />
-              <Route path="/acceptable-use" element={<AcceptableUse />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/dashboard" element={
-                <ProtectedRoute requiredUserType="client">
-                  <Tickets />
-                </ProtectedRoute>
-              } />
-              <Route path="/vendor-dashboard" element={
-                <ProtectedRoute requiredUserType="vendor">
-                  <VendorDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/profile" element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              } />
-              <Route path="/tickets" element={
-                <ProtectedRoute requiredUserType="client">
-                  <Tickets />
-                </ProtectedRoute>
-              } />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <div className="min-h-screen flex flex-col">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/*" element={
+                  <>
+                    <Header />
+                    <main className="flex-1">
+                      <Routes>
+                        <Route path="/faq" element={<FAQ />} />
+                        <Route path="/contact" element={<Contact />} />
+                        <Route path="/terms" element={<Terms />} />
+                        <Route path="/privacy" element={<Privacy />} />
+                        <Route path="/cookies" element={<Cookies />} />
+                        <Route path="/acceptable-use" element={<AcceptableUse />} />
+                        <Route path="/dashboard" element={
+                          <ProtectedRoute requiredUserType="client">
+                            <Tickets />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/vendor-dashboard" element={
+                          <ProtectedRoute requiredUserType="vendor">
+                            <VendorDashboard />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/profile" element={
+                          <ProtectedRoute>
+                            <Profile />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="/tickets" element={
+                          <ProtectedRoute requiredUserType="client">
+                            <Tickets />
+                          </ProtectedRoute>
+                        } />
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </main>
+                    <Footer />
+                  </>
+                } />
+              </Routes>
+            </div>
           </BrowserRouter>
         </TooltipProvider>
       </QuoteFormProvider>
